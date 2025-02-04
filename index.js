@@ -3,6 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
+import cors from "cors";
 
 //importing custom routes
 import adminRoutes from "./routes/admin.js";
@@ -22,9 +23,13 @@ const DB_NAME = process.env.DB_NAME;
 mongoose.connect(DB_URI, { dbName: DB_NAME });
 
 // using 3rd party middleware
+app.use(cors());
 app.use(bodyParser.json());
 
 // application routes
+// static routes
+app.use(express.static("public"));
+
 app.use("/api/admin", adminRoutes);
 
 // not found routes

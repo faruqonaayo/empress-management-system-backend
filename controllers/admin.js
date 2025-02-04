@@ -1,18 +1,32 @@
 // importing 3rd party modules
 import { validationResult } from "express-validator";
 import mongoose from "mongoose";
+import appRootPath from "app-root-path";
 
 // importing custom models
 import Category from "../models/category.js";
+import deleteFile from "../utils/deleteFile.js";
 
 export async function addNewCategory(req, res, next) {
   try {
     const categoryNameInput = req.body.categoryName;
+    const categoryImageInput = req.file;
+
+    // checking if a image file was uploaded
+    if (!categoryImageInput) {
+      return res
+        .status(422)
+        .json({ message: "No image uploaded", statusCode: 422 });
+    }
 
     const { errors } = validationResult(req);
 
     //   checking for errors in the user input
     if (errors.length > 0) {
+      // deleting uploaded file before error response
+      if (categoryImageInput) {
+        deleteFile(`${appRootPath.path}/${categoryImageInput.path}`);
+      }
       return res.status(422).json({ message: errors[0].msg, statusCode: 422 });
     }
 
@@ -22,13 +36,21 @@ export async function addNewCategory(req, res, next) {
 
     //   checking if the category name exists in the database
     if (categoryExist) {
+      // deleting uploaded file before error response
+      if (categoryImageInput) {
+        deleteFile(`${appRootPath.path}/${categoryImageInput.path}`);
+      }
+
       return res
         .status(422)
         .json({ message: "Category exist in the database", statusCode: 422 });
     }
 
     //   creating a new category
-    const newCategory = new Category({ categoryName: categoryNameInput });
+    const newCategory = new Category({
+      categoryName: categoryNameInput,
+      categoryImage: categoryImageInput.path.split("public\\")[1],
+    });
 
     //   saving new strategy
     await newCategory.save();
@@ -123,6 +145,9 @@ export async function deleteCategory(req, res, next) {
         .status(422)
         .json({ message: "Category does not exist", statusCode: 422 });
     }
+
+    // deleting the image of the category
+    deleteFile("public\\" + categoryExist.categoryImage);
 
     await Category.findByIdAndDelete(id);
 
