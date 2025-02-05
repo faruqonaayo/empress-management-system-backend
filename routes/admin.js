@@ -49,8 +49,9 @@ router.put(
 router.get("/all-categories", adminControllers.getAllCategories);
 
 // route to update a category
-router.post(
+router.patch(
   "/category/update",
+  uploads.single("categoryImage"),
   [
     body("categoryName")
       .isLength({ min: 1 })

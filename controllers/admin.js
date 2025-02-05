@@ -83,6 +83,7 @@ export async function updateCategory(req, res, next) {
   try {
     const { id } = req.query;
     const categoryNameInput = req.body.categoryName;
+    const categoryImageInput = req.file;
 
     //   checking if id is a valid ObjectID
     if (!mongoose.isValidObjectId(id) || !id) {
@@ -112,7 +113,22 @@ export async function updateCategory(req, res, next) {
         .json({ message: "Category does not exist", statusCode: 422 });
     }
 
+    // checking if an image was uploaded
+    let newImagePath;
+    if (categoryImageInput) {
+      // new image path
+      newImagePath = categoryImageInput.path.split("public\\")[1];
+
+      // deleting the previous image
+      deleteFile(`${appRootPath.path}/public/${categoryExist.categoryImage}`);
+    }
+
     categoryExist.categoryName = categoryNameInput;
+
+    // checking if there is a new image path
+    if (newImagePath) {
+      categoryExist.categoryImage = newImagePath;
+    }
 
     await categoryExist.save();
 
